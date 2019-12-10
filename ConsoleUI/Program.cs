@@ -1,21 +1,10 @@
-﻿using System;
+﻿using BrownfieldLibrary;
+using BrownfieldLibrary.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-// Please note - THIS IS A BAD APPLICATION - DO NOT REPLICATE WHAT IT DOES
-// This application was designed to simulate a poorly-built application that
-// you need to support.  Do not follow any of these practices.  This is for
-// demonstration purposes only.  You have been warned.
-
-// Steps to debug
-// D.R.I.F.T
-// D = Don't panic
-// R = Read the error message
-// I = Identify the purpose of the code
-// F = Figure out what breaks that code
-// T = Try to find a new solution where the code doesn't break
 
 namespace ConsoleUI
 {
@@ -23,87 +12,73 @@ namespace ConsoleUI
   {
     static void Main(string[] args)
     {
-      string w, rawTimeWorked;
-      int i;
-      double ttl, t;
+      List<TimeSheetEntryModel> timeSheets = LoadTimeSheets();
 
-      List<TimeSheetEntry> ents = LoadTimeSheets();
+      List<CustomerModel> customers = DataAccess.GetCustomers();
 
-      ttl = 0;
-      for (i = 0; i < ents.Count; i++)
-      {
-        if (ents[i].WorkDone.ToLower().Contains("acme"))
-        {
-          ttl += ents[i].HoursWorked;
-        }
-      }
-      Console.WriteLine("Simulating Sending email to Acme");
-      Console.WriteLine("Your bill is $" + ttl * 150 + " for the hours worked.");
+      EmployeeModel currentEmployee = DataAccess.GetCurrentEmployee();
 
-      ttl = 0;
-      for (i = 0; i < ents.Count; i++)
+      foreach (var customer in customers)
       {
-        if (ents[i].WorkDone.ToLower().Contains("abc"))
-        {
-          ttl += ents[i].HoursWorked;
-        }
+        BillCustomer(timeSheets, customer);
       }
-      Console.WriteLine("Simulating Sending email to ABC");
-      Console.WriteLine("Your bill is $" + ttl * 125 + " for the hours worked.");
 
-      ttl = 0;
-      for (i = 0; i < ents.Count; i++)
-      {
-        ttl += ents[i].HoursWorked;
-      }
-      if (ttl > 40)
-      {
-        Console.WriteLine("You will get paid $" + (((ttl - 40) * 15) + (40 * 10)) + " for your work.");
-      }
-      else
-      {
-        Console.WriteLine("You will get paid $" + ttl * 10 + " for your time.");
-      }
+      PayEmployee(timeSheets, currentEmployee);
+
       Console.WriteLine();
       Console.Write("Press any key to exit application...");
       Console.ReadKey();
     }
 
-    private static List<TimeSheetEntry> LoadTimeSheets()
+    private static void PayEmployee(List<TimeSheetEntryModel> timeSheets, EmployeeModel employee)
     {
-      List<TimeSheetEntry> output = new List<TimeSheetEntry>();
+      decimal totalPay = TimeSheetProcessor.CalculateEmployeePay(timeSheets, employee);
+      Console.WriteLine($"You will get paid ${totalPay} for your time");
+    }
+
+    private static void BillCustomer(List<TimeSheetEntryModel> timeSheets, CustomerModel customer)
+    {
+      double totalHours = TimeSheetProcessor.GetHoursWorkedForCompany(timeSheets, customer.CustomerName);
+
+      Console.WriteLine($"Simulating Sending email to {customer.CustomerName}");
+      Console.WriteLine();
+      Console.WriteLine("Your bill is $" + (decimal)totalHours * customer.HourlyRateToBill + " for the hours worked.");
+      Console.WriteLine();
+    }
+
+    private static List<TimeSheetEntryModel> LoadTimeSheets()
+    {
+      List<TimeSheetEntryModel> output = new List<TimeSheetEntryModel>();
       string enterMoreTimeSheets = "";
       do
       {
         Console.Write("Enter what you did: ");
         string workDone = Console.ReadLine();
+        Console.WriteLine();
         Console.Write("How long did you do it for: ");
         string rawHoursWorked = Console.ReadLine();
+        Console.WriteLine();
         double hoursWorked;
 
         while (double.TryParse(rawHoursWorked, out hoursWorked) == false)
         {
-          Console.WriteLine();
           Console.WriteLine("Invalid number given");
+          Console.WriteLine();
           Console.Write("How long did you do it for: ");
           rawHoursWorked = Console.ReadLine();
+          Console.WriteLine();
         }
 
-        TimeSheetEntry timeSheet = new TimeSheetEntry();
+        TimeSheetEntryModel timeSheet = new TimeSheetEntryModel();
         timeSheet.HoursWorked = hoursWorked;
         timeSheet.WorkDone = workDone;
         output.Add(timeSheet);
         Console.Write("Do you want to enter more time (yes/no): ");
         enterMoreTimeSheets = Console.ReadLine();
+        Console.WriteLine();
       } while (enterMoreTimeSheets == "yes");
 
       return output;
     }
-  }
-
-  class TimeSheetEntry
-  {
-    public double HoursWorked { get; set; }
-    public string WorkDone { get; set; }
   }
 }

@@ -49,5 +49,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BrownfieldLibrary\BrownfieldLibrary.csproj">
+      <Project>{B94D7AE1-3C00-4F94-8CF4-B416A5DBB165}</Project>
+      <Name>BrownfieldLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
